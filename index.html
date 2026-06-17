@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>AutoFuture — Decision Infrastructure for Modern Organizations</title>
+<meta name="description" content="AutoFuture helps organizations understand earlier, predict better, and decide faster." />
+<link rel="canonical" href="https://www.autofuture.ai/" />
+<meta name="theme-color" content="#080808" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="AutoFuture" />
+<meta property="og:url" content="https://www.autofuture.ai/" />
+<meta property="og:title" content="AutoFuture — Decision Infrastructure for Modern Organizations" />
+<meta property="og:description" content="AutoFuture helps organizations understand earlier, predict better, and decide faster." />
+<meta property="og:image" content="https://www.autofuture.ai/assets/og-image.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="AutoFuture — Decision Infrastructure for Modern Organizations" />
+<meta name="twitter:description" content="AutoFuture helps organizations understand earlier, predict better, and decide faster." />
+<meta name="twitter:image" content="https://www.autofuture.ai/assets/og-image.jpg" />
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<link rel="apple-touch-icon" href="assets/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#080808;
+  --ink:#F0EDE6;
+  --gold:#C8A96E;
+  --line:rgba(240,237,230,.08);
+  --line-strong:rgba(240,237,230,.16);
+  --dim:rgba(240,237,230,.42);
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --gutter:clamp(20px,5vw,72px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:auto;background:var(--bg)}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:'DM Sans',system-ui,sans-serif;font-weight:300;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+.mono{font-family:'JetBrains Mono',monospace}
+::selection{background:var(--gold);color:var(--bg)}
+
+/* ---------- PERSISTENT LAYER ---------- */
+/* fixed behind everything: grid + vignette that subtly breathe with scroll */
+.persistent{position:fixed;inset:0;z-index:0;pointer-events:none}
+.grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(var(--line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:80px 80px;
+  opacity:0;transition:opacity 1.2s var(--ease);
+  -webkit-mask-image:radial-gradient(ellipse 120% 90% at 50% 40%,#000 30%,transparent 85%);
+          mask-image:radial-gradient(ellipse 120% 90% at 50% 40%,#000 30%,transparent 85%);
+}
+.vignette{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 90% 80% at 50% 50%,transparent 40%,rgba(0,0,0,.55) 100%);
+}
+/* the AXIS — vertical narrative spine on the left. grows as you scroll. */
+.axis{
+  position:fixed;left:var(--gutter);top:0;bottom:0;width:1px;z-index:30;
+  pointer-events:none;
+}
+.axis-track{position:absolute;inset:0;background:var(--line)}
+.axis-fill{
+  position:absolute;left:0;top:0;width:1px;height:0;
+  background:linear-gradient(180deg,transparent,var(--gold) 12%,var(--gold) 88%,transparent);
+  box-shadow:0 0 12px rgba(200,169,110,.4);
+}
+.axis-node{
+  position:absolute;left:50%;width:7px;height:7px;border-radius:50%;
+  background:var(--bg);border:1px solid var(--line-strong);
+  transform:translate(-50%,-50%);transition:all .6s var(--ease);
+}
+.axis-node[data-on="1"]{
+  background:var(--gold);border-color:var(--gold);
+  box-shadow:0 0 14px rgba(200,169,110,.6);
+}
+.axis-node .lbl{
+  position:absolute;left:18px;top:50%;transform:translateY(-50%);
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.22em;
+  color:var(--dim);white-space:nowrap;opacity:0;transition:opacity .5s var(--ease);
+  text-transform:uppercase;
+}
+.axis-node[data-on="1"] .lbl{opacity:1;color:var(--gold)}
+
+/* ---------- HEADER ---------- */
+header{
+  position:fixed;top:0;left:0;right:0;z-index:60;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px var(--gutter);
+  transition:background .5s var(--ease),backdrop-filter .5s var(--ease),padding .5s var(--ease),border-color .5s var(--ease);
+  border-bottom:1px solid transparent;
+}
+header[data-solid="1"]{
+  background:rgba(8,8,8,.72);backdrop-filter:blur(18px) saturate(1.1);
+  -webkit-backdrop-filter:blur(18px) saturate(1.1);
+  border-bottom-color:var(--line);padding-top:16px;padding-bottom:16px;
+}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink)}
+.brand img{height:26px;width:auto;display:block;opacity:.95}
+.brand .wm{font-size:17px;letter-spacing:.01em;font-weight:400}
+.brand .tm{font-size:9px;vertical-align:super;color:var(--dim);margin-left:1px}
+.brand .beta-mark{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold);opacity:.7;margin-left:12px;
+  padding:3px 7px;border:1px solid rgba(200,169,110,.28);border-radius:2px;
+  white-space:nowrap;align-self:center}
+@media(max-width:560px){.brand .beta-mark{display:none}}
+.nav-state{
+  display:flex;align-items:center;gap:14px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;
+  color:var(--dim);text-transform:uppercase;
+}
+.nav-state .dot{width:5px;height:5px;border-radius:50%;background:var(--gold);
+  box-shadow:0 0 8px var(--gold);animation:pulse 2.6s var(--ease) infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.nav-cta{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;
+  color:var(--ink);text-decoration:none;padding:9px 16px;
+  border:1px solid var(--line-strong);border-radius:2px;
+  transition:all .4s var(--ease);text-transform:uppercase;
+}
+.nav-cta:hover{border-color:var(--gold);color:var(--gold);background:rgba(200,169,110,.05)}
+@media(max-width:720px){.nav-state{display:none}}
+
+/* ---------- SCROLL STAGE ---------- */
+/* tall scroll container; inside, a sticky viewport holds the video + overlays */
+#engine{position:relative;z-index:10}
+.scene-track{position:relative;height:1000vh}      /* full six-beat arc */
+.stage{
+  position:sticky;top:0;height:100vh;width:100%;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+}
+.video-wrap{position:absolute;inset:0;z-index:1}
+#spine{
+  position:absolute;top:50%;left:50%;
+  width:100%;height:100%;object-fit:cover;
+  transform:translate(-50%,-50%) scale(1.06);
+  will-change:transform,filter;
+}
+/* darkening layer over video — eases readability, modulated by JS */
+.video-scrim{position:absolute;inset:0;z-index:2;background:rgba(8,8,8,0);will-change:background}
+
+/* ---------- NARRATIVE OVERLAYS ---------- */
+.overlays{position:absolute;inset:0;z-index:5;pointer-events:none}
+.act{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:0 var(--gutter);
+  opacity:0;will-change:opacity,transform;
+}
+.act .kicker{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.34em;
+  color:var(--gold);text-transform:uppercase;margin-bottom:26px;opacity:.9;
+}
+.act h1{
+  font-weight:300;letter-spacing:-.02em;line-height:1.06;
+  font-size:clamp(34px,5.2vw,76px);max-width:15ch;
+}
+.act h1 b{font-weight:500}
+.act .sub{
+  font-size:clamp(16px,1.5vw,21px);color:var(--dim);font-weight:300;
+  max-width:46ch;margin-top:28px;line-height:1.5;
+}
+.act .statement{
+  font-weight:300;letter-spacing:-.015em;line-height:1.2;
+  font-size:clamp(24px,3vw,44px);max-width:22ch;
+}
+.act .statement b{font-weight:500;color:var(--ink)}
+.act .statement .muted{color:var(--dim)}
+/* act-low: sit in the lower third where the video has negative space */
+.act-low{justify-content:flex-end;padding-bottom:14vh}
+.act-low .kicker{margin-bottom:18px}
+
+/* ===================== POST-VIDEO SCENES ===================== */
+.scene{
+  position:absolute;inset:0;z-index:6;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 var(--gutter);opacity:0;pointer-events:none;
+  will-change:opacity;
+}
+.scene.live{pointer-events:auto}
+
+/* --- SCENE 5: PROOF OF THINKING --- */
+.proof-inner{max-width:920px;width:100%;text-align:center}
+.proof-claim{
+  font-weight:300;letter-spacing:-.015em;line-height:1.15;
+  font-size:clamp(28px,3.4vw,50px);margin-bottom:clamp(48px,7vh,90px);
+}
+.proof-claim b{font-weight:500}
+.diagram{position:relative}
+.diagram svg{width:100%;height:auto;overflow:visible}
+.dline{stroke:var(--gold);stroke-width:1;stroke-dasharray:240;stroke-dashoffset:240;
+  filter:drop-shadow(0 0 4px rgba(200,169,110,.5))}
+.dnode circle{fill:var(--bg);stroke:var(--line-strong);stroke-width:1;
+  transform-box:fill-box;transform-origin:center}
+.dnode .core{fill:var(--gold);stroke:var(--gold);opacity:0}
+.dnode .halo{fill:none;stroke:var(--gold);opacity:0}
+.dlabels{display:flex;justify-content:space-between;margin-top:26px;
+  font-family:'JetBrains Mono',monospace;font-size:clamp(10px,1vw,12px);
+  letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.dlabels span{flex:1;opacity:0;will-change:opacity}
+.dlabels span:first-child{text-align:left}
+.dlabels span:last-child{text-align:right}
+
+/* --- SCENE 6: MOHSEN — editorial cover composition ---
+   Layout logic: a content frame that is inset from the persistent nav zone on the
+   left (axis + state labels occupy ~0-220px), with the figure anchored right as a
+   cinematic counterweight and the text in a centered editorial column. Treated as a
+   standalone composition, not a website row. */
+#mohsen{justify-content:center;align-items:center;padding:0}
+.mohsen-frame{
+  position:relative;width:100%;height:100%;
+  /* larger left safe-zone; text column shifted toward the figure */
+  padding-left:clamp(320px,28vw,560px);
+  padding-right:clamp(20px,5vw,90px);
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  align-items:center;column-gap:clamp(24px,3.5vw,64px);
+}
+/* the figure: a cinematic portrait mass on the right, within the dark */
+.mohsen-img{
+  position:relative;align-self:stretch;
+  margin:clamp(60px,12vh,150px) 0;
+  background:url('assets/mohsen.jpg') no-repeat center 18%;
+  background-size:cover;
+  opacity:0;filter:grayscale(1) brightness(.4) blur(8px);
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 34%,#000 88%,transparent 100%);
+          mask-image:linear-gradient(90deg,transparent 0%,#000 34%,#000 88%,transparent 100%);
+  will-change:opacity,filter;
+}
+/* the text: editorial column, optically centered in the left cell */
+.mohsen-copy{position:relative;z-index:2;max-width:560px;justify-self:end;padding-right:clamp(10px,2vw,40px)}
+.belief{
+  font-weight:300;letter-spacing:-.012em;line-height:1.34;
+  font-size:clamp(24px,2.85vw,42px);
+}
+.belief b{font-weight:500;color:var(--ink)}
+.signature{margin-top:40px;display:flex;flex-direction:column;gap:6px;
+  opacity:0;transform:translateY(8px);will-change:opacity,transform}
+.signature .sig-name{font-size:15px;letter-spacing:.02em;color:var(--ink)}
+.signature .sig-role{font-family:'JetBrains Mono',monospace;font-size:10px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+/* tablet: stack with figure behind, text over a safe inset */
+@media(max-width:900px){
+  .mohsen-frame{grid-template-columns:1fr;padding-left:clamp(90px,14vw,160px);
+    padding-right:clamp(24px,8vw,80px)}
+  .mohsen-img{position:absolute;inset:0;margin:0;width:100%;opacity:.5;
+    background-position:center 12%;
+    -webkit-mask-image:linear-gradient(180deg,transparent,#000 55%);
+            mask-image:linear-gradient(180deg,transparent,#000 55%)}
+  .mohsen-copy{justify-self:start;max-width:600px}
+}
+@media(max-width:600px){
+  .mohsen-frame{padding-left:clamp(60px,16vw,90px)}
+}
+
+/* --- SCENE 7: DECISION INFRASTRUCTURE --- */
+.resolve-inner{max-width:760px;width:100%;text-align:center}
+.logo-lockup{margin-bottom:40px;opacity:0;transform:translateY(10px);
+  will-change:opacity,transform}
+.logo-lockup img{height:46px;width:auto}
+.resolve-line{
+  font-weight:300;letter-spacing:-.015em;line-height:1.12;
+  font-size:clamp(32px,4.4vw,64px);margin-bottom:clamp(50px,8vh,96px);
+}
+.resolve-line .muted{color:var(--dim)}
+.paths{display:flex;flex-direction:column;gap:2px;max-width:560px;margin:0 auto}
+.path{
+  position:relative;display:block;text-decoration:none;color:var(--ink);
+  padding:26px 28px;border-top:1px solid var(--line);text-align:left;
+  transition:background .45s var(--ease),padding-left .45s var(--ease);
+  overflow:hidden;
+}
+.path:last-child{border-bottom:1px solid var(--line)}
+.path-label{display:block;font-size:clamp(16px,1.7vw,21px);font-weight:300;
+  letter-spacing:-.01em;transition:color .4s var(--ease)}
+.path-label .arrow{color:var(--gold);margin-right:12px;display:inline-block;
+  transition:transform .45s var(--ease)}
+.path-sub{display:block;font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+  margin-top:0;max-height:0;opacity:0;overflow:hidden;
+  transition:max-height .45s var(--ease),opacity .45s var(--ease),margin-top .45s var(--ease)}
+.path:hover{background:rgba(200,169,110,.04);padding-left:38px}
+.path:hover .path-label{color:var(--gold)}
+.path:hover .path-label .arrow{transform:translateX(4px)}
+.path:hover .path-sub{max-height:30px;opacity:1;margin-top:10px}
+
+/* ===================== SECTION 02 — THE OPERATING SYSTEM ===================== */
+.os{position:relative;z-index:10;background:var(--bg)}
+.os-track{position:relative;height:520vh}      /* scroll length of the OS process */
+.os-stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;
+  display:flex;align-items:center;justify-content:center}
+#osCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+/* thesis */
+.os-thesis{position:absolute;z-index:3;text-align:center;padding:0 var(--gutter);
+  max-width:900px;will-change:opacity,transform}
+.os-thesis .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;
+  letter-spacing:.34em;color:var(--gold);text-transform:uppercase;margin-bottom:26px}
+.os-thesis p{font-weight:300;letter-spacing:-.015em;line-height:1.32;
+  font-size:clamp(24px,3vw,44px)}
+.os-thesis b{font-weight:500;color:var(--ink)}
+/* phase labels */
+.os-phases{position:absolute;z-index:3;left:0;right:0;top:50%;
+  display:flex;align-items:center;justify-content:center;pointer-events:none}
+.os-phase{position:absolute;font-weight:300;letter-spacing:-.02em;
+  font-size:clamp(40px,6.5vw,96px);color:var(--ink);opacity:0;
+  will-change:opacity,transform;white-space:nowrap}
+.os-phase[data-phase="3"]{color:var(--gold)}
+/* caption under phase */
+.os-caption{position:absolute;z-index:3;bottom:16vh;left:0;right:0;text-align:center;
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--dim);opacity:0;transition:opacity .4s var(--ease);
+  padding:0 var(--gutter)}
+@media(max-width:760px){
+  .os-phase{font-size:clamp(34px,11vw,60px)}
+}
+
+/* ===================== SECTION 03 — THE SHIFT ===================== */
+.shift{position:relative;z-index:10;background:var(--bg)}
+.shift-track{position:relative;height:620vh}
+.shift-stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;
+  display:flex;align-items:center;justify-content:center}
+.shift-thesis{position:absolute;z-index:3;text-align:center;padding:0 var(--gutter);
+  max-width:860px;will-change:opacity,transform}
+.shift-thesis .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;
+  letter-spacing:.34em;color:var(--gold);text-transform:uppercase;margin-bottom:26px}
+.shift-thesis p{font-weight:300;letter-spacing:-.015em;line-height:1.32;
+  font-size:clamp(24px,3vw,44px)}
+.shift-thesis b{font-weight:500;color:var(--ink)}
+/* the rows */
+.shift-rows{position:relative;z-index:2;display:flex;flex-direction:column;
+  gap:clamp(10px,2vh,22px);width:100%;max-width:760px;padding:0 var(--gutter);
+  margin-left:clamp(40px,8vw,120px)}   /* clear the axis */
+.shift-row{position:relative;height:clamp(46px,7vh,76px);display:flex;align-items:center}
+.shift-word{position:absolute;left:0;display:flex;white-space:nowrap;
+  font-weight:300;letter-spacing:-.01em;font-size:clamp(30px,4.4vw,62px);line-height:1}
+.shift-letter{display:inline-block;will-change:transform,opacity,filter;position:relative}
+/* the small "signal mark" each letter passes through mid-transform */
+.shift-letter::after{content:"";position:absolute;left:50%;top:50%;
+  width:3px;height:3px;border-radius:50%;background:var(--gold);
+  transform:translate(-50%,-50%);opacity:var(--dot,0);
+  box-shadow:0 0 6px rgba(200,169,110,.7);pointer-events:none}
+.shift-letter .glyph{display:inline-block}
+.shift-row .num{position:absolute;left:-1px;top:50%;transform:translateY(-50%);
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;
+  color:var(--line-strong);display:none}
+@media(max-width:760px){
+  .shift-rows{margin-left:clamp(30px,10vw,70px)}
+  .shift-word{font-size:clamp(26px,8vw,44px)}
+}
+
+/* ===================== SECTION 04 — PROOF IN THE REAL ===================== */
+.proof04{position:relative;z-index:10;background:var(--bg)}
+.proof04-track{position:relative;height:720vh}   /* generous: each frame gets room to be still */
+.proof04-stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;
+  display:flex;align-items:center;justify-content:center}
+#proofCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.proof04-thesis{position:absolute;z-index:3;text-align:center;padding:0 var(--gutter);
+  max-width:820px;will-change:opacity,transform}
+.proof04-thesis .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;
+  letter-spacing:.34em;color:var(--gold);text-transform:uppercase;margin-bottom:26px}
+.proof04-thesis p{font-weight:300;letter-spacing:-.015em;line-height:1.32;
+  font-size:clamp(24px,3vw,44px)}
+.proof04-thesis b{font-weight:500;color:var(--ink)}
+
+/* evidence frame — editorial, lots of negative space, left-anchored clear of axis */
+.evidence{position:absolute;z-index:3;top:0;left:0;right:0;bottom:0;
+  display:flex;flex-direction:column;justify-content:center;
+  padding-left:clamp(220px,22vw,460px);padding-right:clamp(20px,6vw,120px);
+  opacity:0;pointer-events:none;will-change:opacity}
+.ev-index{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;
+  color:var(--line-strong);margin-bottom:20px}
+.ev-cat{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:34px}
+.ev-situation{font-weight:300;letter-spacing:-.01em;line-height:1.3;
+  font-size:clamp(24px,3.2vw,46px);color:var(--ink);max-width:18ch;margin-bottom:40px}
+.ev-intervention{position:relative;padding-left:22px;max-width:42ch;
+  font-weight:300;line-height:1.5;font-size:clamp(15px,1.5vw,19px);color:var(--dim);
+  margin-bottom:48px}
+.ev-intervention::before{content:"";position:absolute;left:0;top:4px;bottom:4px;
+  width:1px;background:var(--gold);opacity:.5}
+/* the single key outcome resolving in the foreground: FROM -> TO */
+.ev-change{display:flex;align-items:baseline;gap:clamp(16px,2.5vw,40px);
+  font-weight:300;letter-spacing:-.01em;font-size:clamp(28px,4vw,58px);margin-bottom:30px}
+.ev-from{color:var(--dim);position:relative}
+.ev-arrow{font-size:.5em;color:var(--line-strong);transform:translateY(-.15em)}
+.ev-to{color:var(--gold);position:relative}
+.ev-outcome{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);max-width:46ch;line-height:1.7}
+
+/* bridge to the Invitation */
+.proof04-bridge{position:absolute;z-index:3;text-align:center;padding:0 var(--gutter);
+  max-width:760px;opacity:0;will-change:opacity,transform}
+.proof04-bridge p{font-weight:300;letter-spacing:-.015em;line-height:1.3;
+  font-size:clamp(26px,3.4vw,50px);color:var(--dim)}
+.proof04-bridge b{font-weight:500;color:var(--ink)}
+
+@media(max-width:900px){
+  .evidence{padding-left:clamp(80px,14vw,160px)}
+}
+
+/* ===================== SECTION 05 — THE INVITATION ===================== */
+.invite{position:relative;z-index:10;background:var(--bg)}
+.invite-track{position:relative;height:300vh}   /* short: arrival, not a journey */
+.invite-stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 var(--gutter) clamp(120px,18vh,180px);text-align:center}
+/* the symbol — axis terminus */
+.invite-mark{margin-bottom:clamp(28px,5vh,56px);opacity:0;will-change:opacity,transform}
+.invite-mark img{height:clamp(54px,7vw,84px);width:auto}
+/* resolution line */
+.invite-line{margin-bottom:clamp(36px,6vh,80px);opacity:0;will-change:opacity,transform}
+.invite-line p{font-weight:300;letter-spacing:-.018em;line-height:1.1;
+  font-size:clamp(34px,5vw,76px)}
+.invite-line .muted{color:var(--dim)}
+/* the paths */
+.invite-paths{width:100%;max-width:680px;position:relative;opacity:0;
+  will-change:opacity,transform}
+.ipath{position:relative;display:flex;align-items:center;gap:clamp(16px,2vw,28px);
+  text-decoration:none;color:var(--ink);text-align:left;
+  padding:clamp(22px,3vh,30px) 8px;border-top:1px solid var(--line);
+  transition:padding-left .5s var(--ease),border-color .5s var(--ease)}
+.invite-paths .ipath:nth-last-of-type(1){} /* last path before sub */
+.ipath:last-of-type{border-bottom:1px solid var(--line)}
+.ipath-num{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;
+  color:var(--line-strong);transition:color .5s var(--ease);flex-shrink:0}
+.ipath-label{flex:1;font-weight:300;letter-spacing:-.01em;
+  font-size:clamp(17px,1.9vw,24px);transition:color .5s var(--ease)}
+.ipath-arrow{font-size:clamp(16px,1.7vw,22px);color:var(--gold);
+  transform:translateX(-6px);opacity:0;
+  transition:transform .5s var(--ease),opacity .5s var(--ease)}
+.ipath:hover{padding-left:22px;border-color:var(--gold)}
+.ipath:hover .ipath-num{color:var(--gold)}
+.ipath:hover .ipath-label{color:var(--gold)}
+.ipath:hover .ipath-arrow{transform:translateX(0);opacity:1}
+/* shared consequence line, revealed on hover — sits in reserved space inside the
+   paths block so it can never collide with the absolutely-positioned footer */
+.ipath-sub{height:18px;margin-top:24px;margin-bottom:0;text-align:center;
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gold);opacity:0;
+  transition:opacity .45s var(--ease)}
+.ipath-sub.show{opacity:.85}
+/* the quiet close — pinned bottom with guaranteed clearance above it */
+.invite-foot{position:absolute;bottom:clamp(24px,4vh,40px);left:0;right:0;
+  display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;
+  will-change:opacity;pointer-events:none}
+.invite-foot .foot-link{pointer-events:auto}
+.invite-foot .brand-mark{font-size:15px;letter-spacing:.01em;color:var(--ink)}
+.invite-foot .brand-mark .tm{font-size:8px;vertical-align:super;color:var(--dim)}
+.invite-foot .foot-line{font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+.invite-foot .foot-meta{display:flex;align-items:center;gap:12px;margin-top:6px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase}
+.invite-foot .foot-link{color:var(--dim);text-decoration:none;transition:color .4s var(--ease)}
+.invite-foot .foot-link:hover{color:var(--gold)}
+.invite-foot .foot-sep{color:var(--line-strong)}
+.invite-foot .foot-beta{color:var(--gold);opacity:.75}
+@media(max-width:600px){
+  .ipath-label{font-size:16px}
+}
+
+
+/* fragment words for ACT I */
+.fragments{position:absolute;inset:0;pointer-events:none}
+.frag{
+  position:absolute;font-family:'JetBrains Mono',monospace;
+  font-size:clamp(11px,1vw,13px);letter-spacing:.1em;color:var(--dim);
+  white-space:nowrap;will-change:transform,opacity;text-transform:uppercase;
+}
+
+/* scroll hint */
+.hint{
+  position:absolute;bottom:34px;left:50%;transform:translateX(-50%);z-index:8;
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;
+  color:var(--dim);text-transform:uppercase;display:flex;flex-direction:column;
+  align-items:center;gap:12px;transition:opacity .6s var(--ease);
+}
+.hint .bar{width:1px;height:38px;background:linear-gradient(var(--gold),transparent);
+  position:relative;overflow:hidden}
+.hint .bar::after{content:"";position:absolute;top:-50%;left:0;width:1px;height:50%;
+  background:var(--gold);animation:drop 2.2s var(--ease) infinite}
+@keyframes drop{0%{top:-50%}60%,100%{top:100%}}
+
+/* progress readout — bottom right */
+.readout{
+  position:fixed;right:var(--gutter);bottom:30px;z-index:55;
+  text-align:right;font-family:'JetBrains Mono',monospace;pointer-events:none;
+}
+.readout .pct{font-size:13px;color:var(--ink);letter-spacing:.08em}
+.readout .st{font-size:9px;color:var(--dim);letter-spacing:.24em;margin-top:5px;text-transform:uppercase}
+@media(max-width:720px){.readout{bottom:20px}.axis{display:none}}
+
+/* loading veil */
+#veil{position:fixed;inset:0;z-index:100;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity 1s var(--ease);}
+#veil.gone{opacity:0;pointer-events:none}
+#veil .mark{display:flex;flex-direction:column;align-items:center;gap:20px}
+#veil img{height:64px;opacity:0;animation:fadeMark 1.4s var(--ease) forwards}
+#veil .ld{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.34em;
+  color:var(--dim);text-transform:uppercase;opacity:0;animation:fadeMark 1.4s .3s var(--ease) forwards}
+#veil .ld-bar{width:160px;height:1px;background:var(--line-strong);position:relative;overflow:hidden;
+  opacity:0;animation:fadeMark 1.4s .2s var(--ease) forwards}
+#veil .ld-bar span{position:absolute;left:0;top:0;height:100%;width:0%;background:var(--gold);
+  box-shadow:0 0 8px var(--gold);transition:width .4s var(--ease)}
+@keyframes fadeMark{to{opacity:1}}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important}
+  #spine{transform:translate(-50%,-50%) scale(1)}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING VEIL -->
+<div id="veil">
+  <div class="mark">
+    <img src="assets/symbol.png" alt="AutoFuture" />
+    <div class="ld-bar"><span id="ldFill"></span></div>
+    <span class="ld" id="ldtxt">Initializing experience</span>
+  </div>
+</div>
+
+<!-- PERSISTENT BACKGROUND LAYER -->
+<div class="persistent" aria-hidden="true">
+  <div class="grid" id="grid"></div>
+  <div class="vignette"></div>
+</div>
+
+<!-- NARRATIVE AXIS (left spine) -->
+<div class="axis" aria-hidden="true">
+  <div class="axis-track"></div>
+  <div class="axis-fill" id="axisFill"></div>
+  <div class="axis-node" id="n0" style="top:10%"><span class="lbl">Fragmentation</span></div>
+  <div class="axis-node" id="n1" style="top:25%"><span class="lbl">Awareness</span></div>
+  <div class="axis-node" id="n2" style="top:40%"><span class="lbl">Intelligence</span></div>
+  <div class="axis-node" id="n3" style="top:55%"><span class="lbl">Foresight</span></div>
+  <div class="axis-node" id="n4" style="top:70%"><span class="lbl">Proof</span></div>
+  <div class="axis-node" id="n5" style="top:84%"><span class="lbl">The Architect</span></div>
+  <div class="axis-node" id="n6" style="top:97%"><span class="lbl">Infrastructure</span></div>
+</div>
+
+<!-- HEADER -->
+<header id="hdr">
+  <a class="brand" href="#top">
+    <img src="assets/symbol.png" alt="" />
+    <span class="wm">AutoFuture<span class="tm">™</span></span>
+    <span class="beta-mark">Private Beta</span>
+  </a>
+  <div class="nav-state"><span class="dot"></span><span id="navState">Fragmentation</span></div>
+  <a class="nav-cta" href="https://calendly.com/autofuture-ai/30min" target="_blank" rel="noopener">Book a Session</a>
+</header>
+
+<!-- SCROLL ENGINE -->
+<main id="engine">
+  <div id="top"></div>
+  <div class="scene-track" id="track">
+    <div class="stage">
+      <!-- VIDEO SPINE -->
+      <div class="video-wrap">
+        <video id="spine" muted playsinline webkit-playsinline preload="auto" x5-playsinline disablepictureinpicture>
+          <source src="assets/narrative.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <div class="video-scrim" id="scrim"></div>
+
+      <!-- FRAGMENT WORDS (Act I) -->
+      <div class="fragments" id="frags" aria-hidden="true"></div>
+
+      <!-- NARRATIVE OVERLAYS (video-driven arc) -->
+      <div class="overlays">
+        <!-- ACT I — FRAGMENTATION -->
+        <div class="act" data-act="0">
+          <div class="kicker">AutoFuture</div>
+          <h1>Most organizations<br/>don't lack data.</h1>
+        </div>
+        <!-- ACT II — AWARENESS -->
+        <div class="act" data-act="1">
+          <p class="statement"><span class="muted">They lack</span> <b>decision infrastructure.</b></p>
+        </div>
+        <!-- ACT III — INTELLIGENCE (restrained; the video carries the visual here) -->
+        <div class="act act-low" data-act="2">
+          <div class="kicker">The shift</div>
+          <p class="statement"><span class="muted">From scattered signals to</span> <b>systemic intelligence.</b></p>
+        </div>
+        <!-- ACT IV — FORESIGHT (video climax; minimal, lower third) -->
+        <div class="act act-low" data-act="3">
+          <p class="statement"><b>Understand earlier. Predict better. Decide faster.</b></p>
+        </div>
+      </div>
+
+      <!-- ===================== POST-VIDEO ARC ===================== -->
+      <!-- The video freezes & recedes; these scenes evolve over it. -->
+
+      <!-- SCENE 5 — PROOF OF THINKING -->
+      <div class="scene" id="proof">
+        <div class="proof-inner">
+          <div class="kicker">Proof of thinking</div>
+          <p class="proof-claim">This is not an idea.<br/><b>It is a system.</b></p>
+          <div class="diagram" id="diagram" aria-hidden="true">
+            <svg viewBox="0 0 900 160" preserveAspectRatio="xMidYMid meet">
+              <!-- connecting lines (drawn via dashoffset on scroll) -->
+              <line class="dline" id="dl1" x1="180" y1="80" x2="420" y2="80"/>
+              <line class="dline" id="dl2" x1="480" y1="80" x2="720" y2="80"/>
+              <!-- nodes: base ring + gold core (core opacity interpolates) -->
+              <g class="dnode" id="dn1">
+                <circle class="ring" cx="120" cy="80" r="7"/>
+                <circle class="core" cx="120" cy="80" r="7"/>
+              </g>
+              <g class="dnode" id="dn2">
+                <circle class="ring" cx="450" cy="80" r="7"/>
+                <circle class="core" cx="450" cy="80" r="7"/>
+              </g>
+              <g class="dnode" id="dn3">
+                <circle class="ring" cx="780" cy="80" r="7"/>
+                <circle class="core" cx="780" cy="80" r="7"/>
+              </g>
+            </svg>
+            <div class="dlabels">
+              <span id="lb1">Revenue Signals</span>
+              <span id="lb2">Decision Layer</span>
+              <span id="lb3">Organizational Action</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 6 — MOHSEN (the system becomes human) -->
+      <div class="scene" id="mohsen">
+        <div class="mohsen-frame">
+          <div class="mohsen-copy">
+            <p class="belief" id="belief">
+              The future belongs to organizations that can
+              <b>understand earlier</b>, <b>predict better</b>, and <b>decide faster</b>.
+            </p>
+            <div class="signature" id="signature">
+              <span class="sig-name">Mohsen Sajjadi</span>
+              <span class="sig-role">Founder &amp; Systems Architect · AutoFuture</span>
+            </div>
+          </div>
+          <div class="mohsen-img" id="mohsenImg"></div>
+        </div>
+      </div>
+
+      <!-- SCENE 7 — DECISION INFRASTRUCTURE (resolution + CTAs) -->
+      <div class="scene" id="resolve">
+        <div class="resolve-inner">
+          <div class="logo-lockup" id="logoLockup">
+            <img src="assets/symbol.png" alt="" />
+          </div>
+        </div>
+      </div>
+
+      <!-- SCROLL HINT -->
+      <div class="hint" id="hint">
+        <span>Scroll to understand</span>
+        <span class="bar"></span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== SECTION 02 — THE OPERATING SYSTEM ===================== -->
+<section class="os" id="os">
+  <div class="os-track" id="osTrack">
+    <div class="os-stage">
+      <!-- canvas where intelligence moves -->
+      <canvas id="osCanvas"></canvas>
+
+      <!-- framing thesis (entry) -->
+      <div class="os-thesis" id="osThesis">
+        <div class="kicker">The Operating System</div>
+        <p>Modern organizations operate through their ability to<br/>
+           <b>understand</b>, <b>predict</b>, and <b>decide</b> — continuously.</p>
+      </div>
+
+      <!-- phase labels (one at a time, governed by scroll) -->
+      <div class="os-phases" aria-hidden="true">
+        <span class="os-phase" data-phase="0">Signal</span>
+        <span class="os-phase" data-phase="1">Understand</span>
+        <span class="os-phase" data-phase="2">Predict</span>
+        <span class="os-phase" data-phase="3">Decide</span>
+      </div>
+
+      <!-- a quiet line that resolves under each phase -->
+      <div class="os-caption" id="osCaption" aria-hidden="true"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SECTION 03 — THE SHIFT ===================== -->
+<section class="shift" id="shift">
+  <div class="shift-track" id="shiftTrack">
+    <div class="shift-stage">
+      <!-- framing thesis -->
+      <div class="shift-thesis" id="shiftThesis">
+        <div class="kicker">The Shift</div>
+        <p>The shift isn't incremental.<br/>It's a change in how the organization <b>operates</b>.</p>
+      </div>
+
+      <!-- the transformation column: each row converts in place -->
+      <div class="shift-rows" id="shiftRows" aria-hidden="true">
+        <div class="shift-row" data-before="GUESSWORK"  data-after="FORESIGHT"></div>
+        <div class="shift-row" data-before="REACTING"   data-after="ORCHESTRATING"></div>
+        <div class="shift-row" data-before="HINDSIGHT"  data-after="REAL-TIME"></div>
+        <div class="shift-row" data-before="FRAGMENTS"  data-after="SYSTEM"></div>
+        <div class="shift-row" data-before="OPINIONS"   data-after="EVIDENCE"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SECTION 04 — PROOF IN THE REAL ===================== -->
+<section class="proof04" id="proof04">
+  <div class="proof04-track" id="proof04Track">
+    <div class="proof04-stage">
+      <canvas id="proofCanvas"></canvas>
+
+      <!-- framing thesis -->
+      <div class="proof04-thesis" id="proof04Thesis">
+        <div class="kicker">Proof in the Real</div>
+        <p>Belief becomes evidence<br/>when the transformation can be <b>witnessed</b>.</p>
+      </div>
+
+      <!-- three evidence frames; PLACEHOLDER copy to be replaced with real cases -->
+      <div class="evidence" id="ev0"
+           data-cat="B2B SAAS · SERIES B"
+           data-situation="Revenue signals scattered across twelve disconnected tools."
+           data-intervention="A single decision layer unified pipeline, product, and intent signals."
+           data-from="FRAGMENTED" data-to="UNIFIED"
+           data-outcome="The revenue org now operates from one source of truth.">
+      </div>
+      <div class="evidence" id="ev1"
+           data-cat="GLOBAL MANUFACTURING"
+           data-situation="Operational decisions made weeks after the data that informed them."
+           data-intervention="Forecasting and signal interpretation moved into continuous operation."
+           data-from="WEEKS" data-to="HOURS"
+           data-outcome="Decision latency collapsed from quarterly cycles to daily cadence.">
+      </div>
+      <div class="evidence" id="ev2"
+           data-cat="FINANCIAL SERVICES"
+           data-situation="Strategy driven by the loudest opinion in the room."
+           data-intervention="Decisions re-anchored to a shared, evidence-based operating model."
+           data-from="OPINION" data-to="EVIDENCE"
+           data-outcome="Leadership now decides from a single, defensible system of record.">
+      </div>
+
+      <!-- bridge line into the Invitation -->
+      <div class="proof04-bridge" id="proof04Bridge">
+        <p>The pattern is consistent.<br/><b>The outcome is repeatable.</b></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SECTION 05 — THE INVITATION ===================== -->
+<section class="invite" id="invite">
+  <div class="invite-track" id="inviteTrack">
+    <div class="invite-stage">
+      <!-- the axis terminates here: the symbol completes one final time -->
+      <div class="invite-mark" id="inviteMark">
+        <img src="assets/symbol.png" alt="AutoFuture" />
+      </div>
+
+      <!-- the resolution line: the full category, finally earned -->
+      <div class="invite-line" id="inviteLine">
+        <p>Decision Infrastructure<br/><span class="muted">for modern organizations.</span></p>
+      </div>
+
+      <!-- the two paths — arrival, not buttons -->
+      <div class="invite-paths" id="invitePaths">
+        <a class="ipath" href="https://calendly.com/autofuture-ai/30min" target="_blank" rel="noopener" data-sub="For organizations ready to decide differently.">
+          <span class="ipath-num">01</span>
+          <span class="ipath-label">Book an Executive Strategy Session</span>
+          <span class="ipath-arrow">→</span>
+        </a>
+        <a class="ipath" href="https://app.autofuture.ai" target="_blank" rel="noopener" data-sub="Access to the operating system · By invitation only.">
+          <span class="ipath-num">02</span>
+          <span class="ipath-label">Request Private Beta Access</span>
+          <span class="ipath-arrow">→</span>
+        </a>
+        <div class="ipath-sub" id="ipathSub">&nbsp;</div>
+      </div>
+
+      <!-- the quiet close -->
+      <div class="invite-foot" id="inviteFoot">
+        <span class="brand-mark">AutoFuture<span class="tm">™</span></span>
+        <span class="foot-line">Decision Infrastructure for modern organizations</span>
+        <div class="foot-meta">
+          <a class="foot-link" href="https://www.linkedin.com/in/mohsensajjadi-ai/" target="_blank" rel="noopener">LinkedIn</a>
+          <span class="foot-sep">·</span>
+          <span class="foot-beta">Private Beta</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRESS READOUT -->
+<div class="readout" aria-hidden="true">
+  <div class="pct" id="pct">00</div>
+  <div class="st" id="stName">Fragmentation</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var video = document.getElementById('spine');
+  var track = document.getElementById('track');
+  var scrim = document.getElementById('scrim');
+  var grid  = document.getElementById('grid');
+  var axisFill = document.getElementById('axisFill');
+  var hint = document.getElementById('hint');
+  var hdr = document.getElementById('hdr');
+  var pctEl = document.getElementById('pct');
+  var stEl = document.getElementById('stName');
+  var navState = document.getElementById('navState');
+  var veil = document.getElementById('veil');
+  var acts = Array.prototype.slice.call(document.querySelectorAll('.act'));
+  var nodes = [0,1,2,3,4,5,6].map(function(i){return document.getElementById('n'+i);});
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var VID_DUR = 14.07;
+
+  /* The video arc owns the first VID_END of the scroll. After that, the video
+     freezes/recedes and the post-video scenes (Proof, Mohsen, Resolve) evolve. */
+  var VID_END = 0.56;
+
+  /* post-video scene elements */
+  var sceneProof  = document.getElementById('proof');
+  var sceneMohsen = document.getElementById('mohsen');
+  var sceneResolve= document.getElementById('resolve');
+  var mohsenImg   = document.getElementById('mohsenImg');
+  var signature   = document.getElementById('signature');
+  var logoLockup  = document.getElementById('logoLockup');
+  var paths       = document.getElementById('paths');
+  var dnodes = [1,2,3].map(function(i){return document.getElementById('dn'+i);});
+  var dcores = dnodes.map(function(g){return g.querySelector('.core');});
+  var drings = dnodes.map(function(g){return g.querySelector('.ring');});
+  var dlines = [document.getElementById('dl1'),document.getElementById('dl2')];
+  var dlabels= [1,2,3].map(function(i){return document.getElementById('lb'+i);});
+
+  /* ---- STATE MAP: scroll progress (0..1) -> narrative state ----
+     Beats 1-4 ride the video clock; beats 5-6 are post-video. */
+  var STATES = [
+    {p:0.00, name:'Fragmentation'},
+    {p:0.16, name:'Awareness'},
+    {p:0.34, name:'Intelligence'},
+    {p:0.46, name:'Foresight'},
+    {p:0.60, name:'Proof of Thinking'},
+    {p:0.76, name:'The Architect'},
+    {p:0.90, name:'Decision Infrastructure'}
+  ];
+
+  /* fragment words for Act I — positioned, then pulled toward the axis on scroll */
+  var FRAG_WORDS = ['REVENUE','PIPELINE','FORECAST','CHURN','SIGNALS','OPS','CRM','ATTRIBUTION','HEADCOUNT','MARGIN','INTENT','VELOCITY'];
+  var fragsEl = document.getElementById('frags');
+  var fragNodes = [];
+  (function buildFrags(){
+    var W = window.innerWidth, H = window.innerHeight;
+    FRAG_WORDS.forEach(function(w,i){
+      var s = document.createElement('span');
+      s.className='frag';s.textContent=w;
+      // scatter across viewport, biased away from center
+      var ang = (i/FRAG_WORDS.length)*Math.PI*2 + 0.6;
+      var rad = 0.28 + ((i*53)%40)/100;            // 0.28..0.68 of half-dim
+      var x = 50 + Math.cos(ang)*rad*46;
+      var y = 50 + Math.sin(ang)*rad*42;
+      s.style.left=x+'%';s.style.top=y+'%';
+      s.dataset.x=x;s.dataset.y=y;
+      fragsEl.appendChild(s);
+      fragNodes.push(s);
+    });
+  })();
+
+  /* ---------- scroll progress ---------- */
+  var progress = 0, target = 0;
+  function computeProgress(){
+    var rect = track.getBoundingClientRect();
+    var scrollable = track.offsetHeight - window.innerHeight;
+    var passed = Math.min(Math.max(-rect.top,0),scrollable);
+    return scrollable>0 ? passed/scrollable : 0;
+  }
+
+  /* easing helpers */
+  function clamp(v,a,b){return Math.min(Math.max(v,a),b);}
+  /* smootherstep (Perlin quintic): zero 1st AND 2nd derivative at both edges.
+     This is the single biggest lever on perceived fluidity — transitions arrive
+     and depart with no detectable snap. Used everywhere in place of smoothstep. */
+  function smooth(edge0,edge1,x){
+    var t=clamp((x-edge0)/(edge1-edge0),0,1);
+    return t*t*t*(t*(t*6-15)+10);
+  }
+  function lerp(a,b,t){return a+(b-a)*t;}
+  /* eased lerp convenience */
+  function elerp(a,b,e0,e1,x){return lerp(a,b,smooth(e0,e1,x));}
+
+  /* ---------- video scrubbing (frame-accurate) ----------
+     Reliable paused-video scrubbing across browsers:
+     - Use currentTime directly (NOT fastSeek — fastSeek snaps to keyframes and is
+       unreliable at repainting a PAUSED video in Chrome, a known cause of the frame
+       appearing frozen even while currentTime advances).
+     - After issuing a seek, request a video frame callback (where supported) so the
+       compositor is nudged to actually present the new frame.
+     - Convergent: re-issue on the next rAF until we reach the target; never stalls. */
+  var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+              (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  var wantTime=0, lastSet=-1, ready=false;
+  var hasRVFC = typeof HTMLVideoElement!=='undefined' &&
+                'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+  function applyVideoSeek(){
+    if(!ready) return;
+    if(Math.abs(wantTime-lastSet) < 0.010) return;   // already essentially there
+    lastSet=wantTime;
+    try{
+      video.currentTime=wantTime;
+      // nudge the compositor to present the seeked frame (paused videos can lag)
+      if(hasRVFC){ video.requestVideoFrameCallback(function(){}); }
+    }catch(e){}
+  }
+  function setVideoTime(t){
+    wantTime=clamp(t,0,VID_DUR-0.02);
+    applyVideoSeek();                                 // issue every frame; convergent
+  }
+  // convergence guard: if a seek lands and we've since moved, re-issue toward target
+  video.addEventListener('seeked',function(){
+    if(ready && Math.abs(wantTime-video.currentTime)>0.04){ lastSet=-1; applyVideoSeek(); }
+  });
+
+  /* ---------- the render loop ---------- */
+  function applyState(p){
+    /* --- normalized sub-progress within each phase --- */
+    var vp = clamp(p / VID_END, 0, 1);            // 0..1 across the video arc
+    var post = clamp((p - VID_END) / (1 - VID_END), 0, 1); // 0..1 after the video
+
+    /* video time rides the video arc, then freezes on the final frame */
+    setVideoTime(vp*(VID_DUR-0.05));
+
+    /* axis fill grows across the WHOLE journey (video + post-video) */
+    axisFill.style.height=(clamp(p,0,1)*100)+'%';
+
+    /* grid: fades in mid-video, persists, and reaches full presence at resolution */
+    grid.style.opacity = Math.max(smooth(0.12,0.5,vp)*0.85, smooth(0.4,1.0,post)*1.0);
+
+    /* ===== PHASE A — VIDEO ARC (vp space) ===== */
+    /* The video's recede is driven by ONE continuous curve spanning the crossover
+       (0.46 in p-space) so there is no rate discontinuity at the video->Proof seam.
+       recede: 0 while the video is the protagonist -> 1 once it's a backdrop. */
+    var recede = smooth(0.46, 0.66, p);          // continuous across the seam
+
+    /* scrim: darken under text, breathe at the climax, then settle to a calm dark
+       backdrop. The backdrop floor is reached via `recede`, not a separate curve. */
+    var textPresence = Math.max(
+      (1-smooth(0.42,0.52,vp)),
+      smooth(0.54,0.62,vp)*(1-smooth(0.80,0.92,vp))*0.8
+    );
+    var darkA = 0.18 + textPresence*0.38;
+    darkA = Math.max(darkA, lerp(0.18, 0.74, recede) + smooth(0.66,1.0,p)*0.08);
+    scrim.style.background='rgba(8,8,8,'+Math.min(darkA,0.94).toFixed(3)+')';
+
+    /* video focus pull (vp) + a single continuous recede (scale/blur/desat) */
+    if(!reduce){
+      var sc = lerp(1.10,1.00,smooth(0,1,vp));
+      sc = lerp(sc, 1.05, recede*0.7);            // drift back as it becomes backdrop
+      var blur = (1-smooth(0.06,0.22,vp))*5 + recede*3.5;
+      var sat  = lerp(1, 0.38, recede);
+      video.style.transform='translate(-50%,-50%) scale('+sc.toFixed(3)+')';
+      video.style.filter='blur('+blur.toFixed(2)+'px) saturate('+sat.toFixed(2)+')';
+    }
+
+    /* video-arc overlays (in vp space) */
+    var a0 = (1-smooth(0.12,0.24,vp));
+    setAct(0, a0, lerp(0,-40,smooth(0,0.24,vp)));
+    var a1 = smooth(0.28,0.37,vp) * (1-smooth(0.46,0.55,vp));
+    setAct(1, a1, lerp(30,-30,smooth(0.26,0.55,vp)));
+    var a2 = smooth(0.58,0.66,vp) * (1-smooth(0.74,0.82,vp));
+    setAct(2, a2, lerp(34,-24,smooth(0.56,0.82,vp)));
+    var a3 = smooth(0.84,0.91,vp) * (1-smooth(0.97,1.0,vp));
+    setAct(3, a3, lerp(28,6,smooth(0.84,1.0,vp)));
+
+    /* fragment convergence (Act I, vp space) */
+    var conv = smooth(0.0,0.22,vp);
+    var fOp  = (1-smooth(0.14,0.22,vp));
+    for(var i=0;i<fragNodes.length;i++){
+      var f=fragNodes[i];
+      var ox=parseFloat(f.dataset.x), oy=parseFloat(f.dataset.y);
+      var dx=(lerp(ox,50,conv)-ox), dy=(lerp(oy,50,conv)-oy);
+      f.style.transform='translate('+dx+'vw,'+dy+'vh) scale('+lerp(1,0.6,conv)+')';
+      f.style.opacity=(fOp*0.8).toFixed(3);
+    }
+
+    /* ===== PHASE B — POST-VIDEO SCENES (post space) =====
+       Handoff design: each beat's exit and the next beat's entry share the SAME
+       crossover point and width, so transitions are continuous (no gap, no pile-up).
+       Crossovers:  Proof|Mohsen @0.38   Mohsen|Resolve @0.72
+       All reveals interpolate continuously — no class toggles, no snaps. */
+
+    // ---- SCENE 5: PROOF OF THINKING ----  window ~[0.00 .. 0.44]
+    var proofOp = smooth(0.015,0.14,post) * (1-smooth(0.33,0.43,post));
+    setScene(sceneProof, proofOp);
+    // architecture draws itself; each element interpolates continuously
+    var draw = smooth(0.05,0.36,post);
+    // node reveal centers (in draw-space), each ~0.18 wide
+    var nodeC=[0.10,0.46,0.82];
+    for(var k=0;k<3;k++){
+      var nv=smooth(nodeC[k]-0.10,nodeC[k]+0.08,draw);  // 0..1 this node
+      dcores[k].style.opacity=nv.toFixed(3);
+      var rs=lerp(0.4,1,nv);                             // ring scales up subtly
+      drings[k].style.transform='scale('+rs.toFixed(3)+')';
+      dcores[k].style.transform='scale('+rs.toFixed(3)+')';
+      dlabels[k].style.opacity=smooth(nodeC[k]-0.04,nodeC[k]+0.12,draw).toFixed(3);
+      dlabels[k].style.color = nv>0.5 ? 'var(--ink)' : 'var(--dim)';
+    }
+    // lines draw between nodes, timed to start as the prior node lands
+    dlines[0].style.strokeDashoffset=(240*(1-smooth(0.16,0.42,draw))).toFixed(1);
+    dlines[1].style.strokeDashoffset=(240*(1-smooth(0.52,0.78,draw))).toFixed(1);
+    // gentle lift on the whole diagram as it exits (parallax continuity into Mohsen)
+    var dgm=document.getElementById('diagram');
+    if(dgm) dgm.style.transform='translateY('+elerp(0,-26,0.30,0.43,post).toFixed(1)+'px)';
+
+    // ---- SCENE 6: THE ARCHITECT ----  window ~[0.33 .. 0.78]
+    // entry mirrors Proof's exit (crossover 0.38), exit mirrors Resolve entry (0.72)
+    var mOp = smooth(0.33,0.45,post) * (1-smooth(0.72,0.82,post));
+    setScene(sceneMohsen, mOp);
+    var emerge = smooth(0.40,0.66,post);                 // image: dark->clear
+    if(mohsenImg){
+      mohsenImg.style.opacity=(mOp*emerge).toFixed(3);
+      mohsenImg.style.filter=
+        'grayscale('+lerp(1,0.12,emerge).toFixed(2)+') '+
+        'brightness('+lerp(0.35,1.0,emerge).toFixed(2)+') '+
+        'blur('+lerp(10,0,emerge).toFixed(1)+'px)';
+      // slow cinematic drift inward as it resolves (depth, not parallax trick)
+      mohsenImg.style.transform='scale('+lerp(1.08,1.0,emerge).toFixed(3)+')';
+    }
+    // belief copy lifts in slightly behind the image
+    var beliefEl=document.getElementById('belief');
+    if(beliefEl){
+      beliefEl.style.opacity=(mOp).toFixed(3);
+      beliefEl.style.transform='translateY('+elerp(18,0,0.36,0.52,post).toFixed(1)+'px)';
+    }
+    // signature resolves LAST, after the belief has landed
+    var sigShow=smooth(0.56,0.66,post)*(1-smooth(0.72,0.80,post));
+    if(signature){
+      signature.style.opacity=sigShow.toFixed(3);
+      signature.style.transform='translateY('+elerp(10,0,0.56,0.66,post).toFixed(1)+'px)';
+    }
+
+    // ---- SCENE 7: DECISION INFRASTRUCTURE ----  window ~[0.70 .. 1.0]
+    var rOp = smooth(0.70,0.82,post);                    // entry mirrors Mohsen exit (0.72)
+    setScene(sceneResolve, rOp);
+    if(logoLockup){
+      logoLockup.style.opacity=smooth(0.73,0.85,post).toFixed(3);
+      logoLockup.style.transform='translateY('+elerp(12,0,0.73,0.85,post).toFixed(1)+'px) scale('+elerp(0.92,1,0.73,0.88,post).toFixed(3)+')';
+    }
+    var resLine=document.querySelector('.resolve-line');
+    if(resLine){
+      resLine.style.opacity=smooth(0.76,0.88,post).toFixed(3);
+      resLine.style.transform='translateY('+elerp(14,0,0.76,0.90,post).toFixed(1)+'px)';
+    }
+    if(paths){
+      var pv=smooth(0.84,0.97,post);
+      paths.style.opacity=pv.toFixed(3);
+      paths.style.transform='translateY('+elerp(16,0,0.84,0.99,post).toFixed(1)+'px)';
+    }
+
+    /* hint fades almost immediately */
+    hint.style.opacity=(1-smooth(0.02,0.08,p)).toFixed(3);
+
+    /* ---- STATE NAME + READOUT ----
+       The hero owns the readout only while it's the active section (p<1). Once we
+       scroll past the hero (p>=1), it releases the readout so Section 02 can drive
+       it — this keeps the indicator continuous across the whole page. */
+    var heroActive = p < 0.999;
+    var st=STATES[0], idx=0;
+    for(var s=0;s<STATES.length;s++){ if(p>=STATES[s].p){ st=STATES[s]; idx=s; } }
+    if(heroActive){
+      if(stEl.textContent!==st.name){ stEl.textContent=st.name; navState.textContent=st.name; }
+      pctEl.textContent=String(Math.round(clamp(p,0,1)*100)).padStart(2,'0');
+    }
+
+    /* axis nodes activate */
+    nodes.forEach(function(n,i){ if(n) n.dataset.on = (i<=idx)?'1':'0'; });
+
+    /* header solidifies after leaving the very top */
+    hdr.dataset.solid = (p>0.015)?'1':'0';
+  }
+
+  function setAct(i,opacity,ty){
+    var el=acts[i]; if(!el)return;
+    el.style.opacity=opacity.toFixed(3);
+    el.style.transform='translateY('+ty.toFixed(1)+'px)';
+    el.style.filter = opacity<0.04 ? 'blur(6px)' : 'blur(0px)';
+  }
+  function setScene(el,opacity){
+    if(!el)return;
+    el.style.opacity=opacity.toFixed(3);
+    el.classList.toggle('live', opacity>0.5);
+  }
+
+  /* ---------- main rAF: smooth the scroll, then render ----------
+     Inertial smoothing makes the video glide rather than snap. We make the smoothing
+     frame-rate INDEPENDENT: the same physical "weight" at 60Hz, 120Hz, or 144Hz.
+     Without this, high-refresh displays feel twitchy and 60Hz feels laggy. */
+  var lastT=performance.now();
+  var SMOOTH_TAU=0.085;     // time-constant (s); lower = snappier, higher = heavier
+  function tick(now){
+    now = now || performance.now();
+    var dt=Math.min((now-lastT)/1000, 0.05);   // clamp dt to avoid jumps after tab-blur
+    lastT=now;
+    target=computeProgress();
+    // exponential smoothing normalized to dt -> identical feel at any refresh rate
+    var a = 1 - Math.exp(-dt/SMOOTH_TAU);
+    progress += (target-progress)*a;
+    if(Math.abs(target-progress)<0.0003) progress=target;
+    applyState(progress);
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------- loader progress tied to real video buffering ---------- */
+  var ldFill=document.getElementById('ldFill');
+  var ldtxt=document.getElementById('ldtxt');
+  function loadPct(){
+    try{
+      if(video.buffered && video.buffered.length){
+        return Math.min(video.buffered.end(video.buffered.length-1)/VID_DUR,1);
+      }
+    }catch(e){}
+    return video.readyState>=3?1:(video.readyState>=1?0.35:0.08);
+  }
+  var ldTimer=setInterval(function(){
+    var pc=loadPct();
+    if(ldFill) ldFill.style.width=Math.round(pc*100)+'%';
+    if(pc>=0.6 && ldtxt) ldtxt.textContent='Calibrating narrative';
+    if(pc>=1){ clearInterval(ldTimer); }
+  },120);
+
+  /* ---------- boot ---------- */
+  function boot(){
+    ready=true;
+    if(ldFill) ldFill.style.width='100%';
+    // Priming for reliable scrubbing: start playback muted, then hold the video in a
+    // "playing at zero speed" state instead of pausing. A playing video repaints on
+    // every currentTime change; a PAUSED video may not (the root cause of the frame
+    // appearing frozen while currentTime advances). playbackRate=0 keeps it presenting
+    // frames on seek without actually advancing on its own.
+    video.muted=true;
+    var pr=video.play();
+    function holdZero(){
+      try{ video.playbackRate=0; }catch(e){}
+      applyVideoSeek();
+    }
+    if(pr&&pr.then){ pr.then(holdZero).catch(function(){
+      // autoplay blocked: fall back to pause; first user scroll-gesture will free it
+      try{ video.pause(); }catch(e){}
+    }); }
+    else { holdZero(); }
+    requestAnimationFrame(tick);
+    // lift veil
+    setTimeout(function(){ veil.classList.add('gone'); },520);
+    setTimeout(function(){ if(veil.parentNode) veil.parentNode.removeChild(veil); clearInterval(ldTimer); },1700);
+  }
+  var booted=false;
+  function bootOnce(){ if(booted)return; booted=true; boot(); }
+
+  // Prefer booting when the video has buffered enough to scrub smoothly (canplaythrough),
+  // but never hang: fall back through canplay -> loadedmetadata -> hard timer.
+  video.addEventListener('canplaythrough',bootOnce,{once:true});
+  video.addEventListener('canplay',function(){ setTimeout(bootOnce,400); },{once:true});
+  if(video.readyState>=1){ setTimeout(bootOnce,300); }
+  else{ video.addEventListener('loadedmetadata',function(){ setTimeout(bootOnce,500); },{once:true}); }
+  setTimeout(bootOnce,3000);   // hard guarantee
+  try{ video.load(); }catch(e){}
+
+  /* iOS unlock: Safari won't let JS scrub currentTime until the video has been
+     played once from a user gesture. Prime it silently on first touch/scroll. */
+  if(isIOS){
+    var primed=false;
+    function prime(){
+      if(primed)return; primed=true;
+      var pr=video.play();
+      if(pr&&pr.then){ pr.then(function(){ video.pause(); }).catch(function(){}); }
+      else{ try{ video.pause(); }catch(e){} }
+      window.removeEventListener('touchstart',prime);
+      window.removeEventListener('touchmove',prime);
+    }
+    window.addEventListener('touchstart',prime,{passive:true,once:false});
+    window.addEventListener('touchmove',prime,{passive:true,once:false});
+  }
+
+  /* rebuild fragment positions on resize */
+  var rT;
+  window.addEventListener('resize',function(){
+    clearTimeout(rT);
+    rT=setTimeout(function(){
+      var W=window.innerWidth;
+      fragNodes.forEach(function(f,i){
+        var ang=(i/fragNodes.length)*Math.PI*2+0.6;
+        var rad=0.28+((i*53)%40)/100;
+        var x=50+Math.cos(ang)*rad*46, y=50+Math.sin(ang)*rad*42;
+        f.style.left=x+'%';f.style.top=y+'%';f.dataset.x=x;f.dataset.y=y;
+      });
+    },200);
+  });
+})();
+</script>
+
+<!-- ===================== SECTION 03 ENGINE ===================== -->
+<script>
+(function(){
+  "use strict";
+  var section=document.getElementById('shift');
+  var track=document.getElementById('shiftTrack');
+  var thesis=document.getElementById('shiftThesis');
+  var rowsWrap=document.getElementById('shiftRows');
+  if(!rowsWrap) return;
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function clamp(v,a,b){return Math.min(Math.max(v,a),b);}
+  function smooth(e0,e1,x){var t=clamp((x-e0)/(e1-e0),0,1);return t*t*t*(t*(t*6-15)+10);}
+  function lerp(a,b,t){return a+(b-a)*t;}
+
+  /* ---- build the rows: each gets a "before" word and an "after" word,
+     both rendered as per-letter spans stacked in the same position ---- */
+  var rows=[];
+  Array.prototype.slice.call(rowsWrap.children).forEach(function(rowEl){
+    var before=rowEl.getAttribute('data-before');
+    var after =rowEl.getAttribute('data-after');
+    var wBefore=makeWord(before,'before');
+    var wAfter =makeWord(after,'after');
+    rowEl.appendChild(wBefore.el);
+    rowEl.appendChild(wAfter.el);
+    rows.push({el:rowEl, before:wBefore, after:wAfter});
+  });
+
+  function makeWord(text,kind){
+    var el=document.createElement('div');
+    el.className='shift-word '+kind;
+    var letters=[];
+    for(var i=0;i<text.length;i++){
+      var s=document.createElement('span');
+      s.className='shift-letter';
+      var g=document.createElement('span');
+      g.className='glyph';
+      g.textContent=text[i]===' '?'\u00A0':text[i];
+      s.appendChild(g);
+      el.appendChild(s);
+      letters.push({s:s,g:g});
+    }
+    return {el:el,letters:letters,text:text};
+  }
+
+  /* ---- scroll progress ---- */
+  var prog=0,targ=0;
+  function compute(){
+    var rect=track.getBoundingClientRect();
+    var scrollable=track.offsetHeight-window.innerHeight;
+    var passed=clamp(-rect.top,0,scrollable);
+    return scrollable>0?passed/scrollable:0;
+  }
+
+  var ink='240,237,230', gold='200,169,110', dim='120,118,112';
+
+  /* per-row transform: t=0 fully BEFORE, t=1 fully AFTER.
+     Each letter passes through a "signal mark" at its local midpoint:
+       phase 1 (0..0.5): before-letter loosens, drifts, fades to a dot
+       phase 2 (0.5..1): after-letter forms from the dot into place */
+  function setRow(row,t){
+    var bl=row.before.letters, al=row.after.letters;
+    var nb=bl.length, na=al.length;
+    // BEFORE word: dissolves across 0..0.55, letters stagger left->right
+    for(var i=0;i<nb;i++){
+      var stagger=i/Math.max(nb-1,1)*0.18;
+      var lt=smooth(0.0+stagger,0.5+stagger,t);     // 0..1 this letter dissolves
+      var L=bl[i];
+      var op=(1-lt);
+      // drift up + scatter slightly, desaturate to dim, shrink toward a dot
+      var dy=lerp(0,-10,lt), dx=lerp(0,(i%2?6:-6)*lt,1);
+      var sc=lerp(1,0.2,lt);
+      L.g.style.transform='translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale('+sc.toFixed(3)+')';
+      L.g.style.opacity=op.toFixed(3);
+      // color shifts from ink toward dim as it loses meaning
+      var cr=Math.round(lerp(240,120,lt)),cg=Math.round(lerp(237,118,lt)),cb=Math.round(lerp(230,112,lt));
+      L.g.style.color='rgb('+cr+','+cg+','+cb+')';
+      // the "signal mark": a dot peaks mid-transform then fades as the row completes
+      var dotPeak=smooth(0.45,0.62,t)*(1-smooth(0.68,0.82,t));
+      L.s.style.setProperty('--dot',dotPeak.toFixed(3));
+    }
+    // AFTER word: forms across 0.5..1, letters stagger left->right, gold
+    for(var j=0;j<na;j++){
+      var stg=j/Math.max(na-1,1)*0.18;
+      var at=smooth(0.5+stg,1.0,t);                 // 0..1 this letter forms
+      var A=al[j];
+      A.g.style.opacity=at.toFixed(3);
+      var ady=lerp(10,0,at), asc=lerp(0.2,1,at);
+      A.g.style.transform='translateY('+ady.toFixed(1)+'px) scale('+asc.toFixed(3)+')';
+      // resolve into gold
+      var ar=Math.round(lerp(200,200,1)),ag=Math.round(lerp(169,169,1)),ab=Math.round(lerp(110,110,1));
+      var blend=at; // fade from ink-ish to gold as it locks
+      var rr=Math.round(lerp(240,200,blend)),rg=Math.round(lerp(237,169,blend)),rb=Math.round(lerp(230,110,blend));
+      A.g.style.color='rgb('+rr+','+rg+','+rb+')';
+    }
+  }
+
+  /* ---- the cascade: map section progress -> per-row progress, staggered ----
+     Rows convert one after another as you scroll. Row k occupies a window; windows
+     overlap a little so the cascade reads as continuous transformation. */
+  var N;
+  function draw(p){
+    N=rows.length;
+    // thesis fades as the transformation begins
+    var thOp=(1-smooth(0.04,0.14,p));
+    thesis.style.opacity=thOp.toFixed(3);
+    thesis.style.transform='translateY('+lerp(0,-28,smooth(0.04,0.14,p)).toFixed(1)+'px)';
+    rowsWrap.style.opacity=smooth(0.08,0.18,p).toFixed(3);
+
+    // rows convert between p=0.16 and p=0.93
+    var start=0.16, end=0.93, span=end-start;
+    var per=span/N;
+    var completed=0;
+    for(var k=0;k<N;k++){
+      var lo=start+k*per*0.82;      // overlap windows (0.82 factor)
+      var hi=lo+per*1.25;
+      var t=smooth(lo,hi,p);
+      setRow(rows[k],reduce?(p>lo?1:0):t);
+      if(t>0.9) completed++;
+    }
+    // update persistent readout for continuity
+    var roPct=document.getElementById('pct'),roSt=document.getElementById('stName'),
+        navSt=document.getElementById('navState');
+    if(roPct){
+      roPct.textContent='03';
+      var lbl = completed>=N ? 'Transformed' : 'The Shift';
+      if(roSt) roSt.textContent=lbl;
+      if(navSt) navSt.textContent=lbl;
+    }
+  }
+
+  var lastT=performance.now(),TAU=0.085,visible=false;
+  function loop(now){
+    now=now||performance.now();
+    var dt=Math.min((now-lastT)/1000,0.05);lastT=now;
+    targ=compute();
+    var a=1-Math.exp(-dt/TAU);
+    prog+=(targ-prog)*a;
+    if(Math.abs(targ-prog)<0.0003)prog=targ;
+    if(visible) draw(reduce?targ:prog);
+    requestAnimationFrame(loop);
+  }
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){visible=e.isIntersecting;});
+  },{rootMargin:'10% 0px'});
+  io.observe(section);
+  requestAnimationFrame(loop);
+})();
+</script>
+
+<!-- ===================== SECTION 04 ENGINE ===================== -->
+<script>
+(function(){
+  "use strict";
+  var section=document.getElementById('proof04');
+  var track=document.getElementById('proof04Track');
+  var canvas=document.getElementById('proofCanvas');
+  var thesis=document.getElementById('proof04Thesis');
+  var bridge=document.getElementById('proof04Bridge');
+  if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function clamp(v,a,b){return Math.min(Math.max(v,a),b);}
+  function smooth(e0,e1,x){var t=clamp((x-e0)/(e1-e0),0,1);return t*t*t*(t*(t*6-15)+10);}
+  function lerp(a,b,t){return a+(b-a)*t;}
+
+  /* ---- build evidence frame DOM from data attributes ---- */
+  var evEls=[].slice.call(document.querySelectorAll('.evidence'));
+  var frames=evEls.map(function(el,i){
+    el.innerHTML=
+      '<div class="ev-index">EVIDENCE / 0'+(i+1)+' — 0'+evEls.length+'</div>'+
+      '<div class="ev-cat">'+el.dataset.cat+'</div>'+
+      '<div class="ev-situation">'+el.dataset.situation+'</div>'+
+      '<div class="ev-intervention">'+el.dataset.intervention+'</div>'+
+      '<div class="ev-change"><span class="ev-from">'+el.dataset.from+
+        '</span><span class="ev-arrow">→</span><span class="ev-to">'+el.dataset.to+'</span></div>'+
+      '<div class="ev-outcome">'+el.dataset.outcome+'</div>';
+    return {
+      el:el,
+      cat:el.querySelector('.ev-cat'),
+      situation:el.querySelector('.ev-situation'),
+      intervention:el.querySelector('.ev-intervention'),
+      change:el.querySelector('.ev-change'),
+      from:el.querySelector('.ev-from'),
+      to:el.querySelector('.ev-to'),
+      outcome:el.querySelector('.ev-outcome'),
+      idx:el.querySelector('.ev-index')
+    };
+  });
+  var NF=frames.length;
+
+  /* ---- canvas: a calm, settled constellation per frame (confidence, not motion) ---- */
+  var DPR=1,W=0,H=0,field=[];
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth;H=canvas.clientHeight;
+    canvas.width=W*DPR;canvas.height=H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    buildField();
+  }
+  function buildField(){
+    // a stable constellation centered slightly right (behind the evidence text's whitespace)
+    field=[];
+    var cx=W*0.66, cy=H*0.5;
+    var R=Math.min(W*0.2,300);
+    var n=26;
+    for(var i=0;i<n;i++){
+      var ang=(i/n)*Math.PI*2 + (i%3)*0.4;
+      var rad=R*(0.35+((i*37)%60)/100);
+      field.push({
+        x:cx+Math.cos(ang)*rad*1.1,
+        y:cy+Math.sin(ang)*rad*0.8,
+        // slight scatter origin for the settle-in
+        sx:cx+Math.cos(ang)*rad*1.6+(Math.random()*2-1)*60,
+        sy:cy+Math.sin(ang)*rad*1.3+(Math.random()*2-1)*60,
+        r:0.7+Math.random()*1.3
+      });
+    }
+  }
+
+  var prog=0,targ=0;
+  function compute(){
+    var rect=track.getBoundingClientRect();
+    var scrollable=track.offsetHeight-window.innerHeight;
+    var passed=clamp(-rect.top,0,scrollable);
+    return scrollable>0?passed/scrollable:0;
+  }
+
+  var ink='240,237,230',gold='200,169,110';
+
+  /* frame windows: thesis .00-.12, then 3 frames evenly, bridge at the end.
+     Each frame: settle .. hold .. release. Deliberately slow, lots of hold. */
+  function frameWindow(i){
+    var start=0.14, end=0.86;
+    var span=(end-start)/NF;
+    var lo=start+i*span;
+    return [lo, lo+span];
+  }
+
+  function draw(p){
+    ctx.clearRect(0,0,W,H);
+
+    /* thesis */
+    var thOp=(1-smooth(0.05,0.13,p));
+    thesis.style.opacity=thOp.toFixed(3);
+    thesis.style.transform='translateY('+lerp(0,-26,smooth(0.05,0.13,p)).toFixed(1)+'px)';
+
+    /* which frame is active */
+    var activeNode=-1;
+    for(var i=0;i<NF;i++){
+      var w=frameWindow(i);
+      var lo=w[0],hi=w[1];
+      // gentle in / long hold / gentle out
+      var seg=(p-lo)/(hi-lo);
+      var inn=smooth(0.0,0.18,seg);
+      var out=smooth(0.82,1.0,seg);
+      var op=clamp(inn*(1-out),0,1);
+      var f=frames[i];
+      f.el.style.opacity=op.toFixed(3);
+
+      if(op>0.02){
+        // settle the constellation behind THIS frame (once, slowly, then still)
+        var settle=smooth(0.0,0.4,seg);     // scatter -> settled, done early, then holds
+        drawConstellation(settle, op);
+
+        // foreground key outcome resolves: FROM dims, TO settles into gold
+        var resolve=smooth(0.30,0.6,seg);
+        f.from.style.opacity=lerp(1,0.4,resolve).toFixed(3);
+        f.to.style.opacity=resolve.toFixed(3);
+        f.to.style.transform='translateY('+lerp(8,0,resolve).toFixed(1)+'px)';
+        // staggered calm reveal of the text blocks
+        f.cat.style.opacity=smooth(0.04,0.16,seg).toFixed(3);
+        f.situation.style.opacity=smooth(0.10,0.26,seg).toFixed(3);
+        f.intervention.style.opacity=smooth(0.20,0.40,seg).toFixed(3);
+        f.outcome.style.opacity=lerp(0,1,smooth(0.55,0.72,seg)).toFixed(3);
+        f.idx.style.opacity='1';
+        if(resolve>0.6) activeNode=i;
+      }
+    }
+
+    /* bridge line — after the last frame */
+    var bOp=smooth(0.88,0.96,p);
+    bridge.style.opacity=bOp.toFixed(3);
+    bridge.style.transform='translateY('+lerp(16,0,smooth(0.88,0.97,p)).toFixed(1)+'px)';
+
+    /* readout continuity */
+    var roPct=document.getElementById('pct'),roSt=document.getElementById('stName'),
+        navSt=document.getElementById('navState');
+    if(roPct){
+      roPct.textContent='04';
+      var lbl = bOp>0.5 ? 'Repeatable' : 'Proof in the Real';
+      if(roSt) roSt.textContent=lbl;
+      if(navSt) navSt.textContent=lbl;
+    }
+  }
+
+  function drawConstellation(settle, alpha){
+    if(W===0)return;
+    // node positions interpolate scatter -> settled, then hold
+    var pts=field.map(function(n){
+      return {x:lerp(n.sx,n.x,settle), y:lerp(n.sy,n.y,settle), r:n.r};
+    });
+    // connection lines — faint, calm
+    ctx.lineWidth=1;
+    for(var i=0;i<pts.length;i++){
+      for(var j=i+1;j<pts.length;j++){
+        var dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+        var d=Math.sqrt(dx*dx+dy*dy);
+        if(d<120){
+          var a=(1-d/120)*0.22*alpha*settle;
+          ctx.strokeStyle='rgba('+ink+','+a.toFixed(3)+')';
+          ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.stroke();
+        }
+      }
+    }
+    // nodes
+    for(var k=0;k<pts.length;k++){
+      ctx.fillStyle='rgba('+ink+','+(0.5*alpha*settle).toFixed(3)+')';
+      ctx.beginPath();ctx.arc(pts[k].x,pts[k].y,pts[k].r,0,Math.PI*2);ctx.fill();
+    }
+  }
+
+  var lastT=performance.now(),TAU=0.10,visible=false;  // higher TAU = calmer, heavier
+  function loop(now){
+    now=now||performance.now();
+    var dt=Math.min((now-lastT)/1000,0.05);lastT=now;
+    targ=compute();
+    var a=1-Math.exp(-dt/TAU);
+    prog+=(targ-prog)*a;
+    if(Math.abs(targ-prog)<0.0003)prog=targ;
+    if(visible) draw(reduce?targ:prog);
+    requestAnimationFrame(loop);
+  }
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){visible=e.isIntersecting;});
+  },{rootMargin:'10% 0px'});
+  io.observe(section);
+  window.addEventListener('resize',function(){clearTimeout(window.__pfR);
+    window.__pfR=setTimeout(resize,180);});
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+
+<!-- ===================== SECTION 05 ENGINE ===================== -->
+<script>
+(function(){
+  "use strict";
+  var section=document.getElementById('invite');
+  var track=document.getElementById('inviteTrack');
+  var mark=document.getElementById('inviteMark');
+  var line=document.getElementById('inviteLine');
+  var paths=document.getElementById('invitePaths');
+  var foot=document.getElementById('inviteFoot');
+  var subEl=document.getElementById('ipathSub');
+  if(!section) return;
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function clamp(v,a,b){return Math.min(Math.max(v,a),b);}
+  function smooth(e0,e1,x){var t=clamp((x-e0)/(e1-e0),0,1);return t*t*t*(t*(t*6-15)+10);}
+  function lerp(a,b,t){return a+(b-a)*t;}
+
+  /* hover consequence lines — shared sub line under the two paths */
+  var ips=[].slice.call(section.querySelectorAll('.ipath'));
+  ips.forEach(function(a){
+    a.addEventListener('mouseenter',function(){
+      subEl.textContent=a.getAttribute('data-sub');
+      subEl.classList.add('show');
+    });
+    a.addEventListener('mouseleave',function(){
+      subEl.classList.remove('show');
+    });
+  });
+
+  var prog=0,targ=0;
+  function compute(){
+    var rect=track.getBoundingClientRect();
+    var scrollable=track.offsetHeight-window.innerHeight;
+    var passed=clamp(-rect.top,0,scrollable);
+    return scrollable>0?passed/scrollable:0;
+  }
+
+  /* The arrival resolves in sequence, then holds in stillness.
+     Sequence (in section progress p): mark .06-.20, line .16-.34,
+     paths .30-.50, foot .46-.62 — then everything just holds. */
+  function draw(p){
+    var mO=smooth(0.06,0.22,p);
+    mark.style.opacity=mO.toFixed(3);
+    mark.style.transform='translateY('+lerp(16,0,mO).toFixed(1)+'px) scale('+lerp(0.9,1,mO).toFixed(3)+')';
+
+    var lO=smooth(0.16,0.36,p);
+    line.style.opacity=lO.toFixed(3);
+    line.style.transform='translateY('+lerp(18,0,lO).toFixed(1)+'px)';
+
+    var pO=smooth(0.30,0.52,p);
+    paths.style.opacity=pO.toFixed(3);
+    paths.style.transform='translateY('+lerp(18,0,pO).toFixed(1)+'px)';
+
+    var fO=smooth(0.48,0.66,p);
+    foot.style.opacity=fO.toFixed(3);
+
+    /* axis: drive it to its true 100% endpoint as we arrive, and light the final node.
+       The persistent axis fill belongs to the hero engine; here we top it off and
+       activate every node so the spine reads as fully complete at journey's end. */
+    var axisFill=document.getElementById('axisFill');
+    if(axisFill && p>0.02){ axisFill.style.height='100%'; }
+    var nz=[]; for(var i=0;i<=6;i++){var n=document.getElementById('n'+i); if(n)n.dataset.on='1';}
+
+    /* readout: the journey completes */
+    var roPct=document.getElementById('pct'),roSt=document.getElementById('stName'),
+        navSt=document.getElementById('navState');
+    if(roPct){
+      roPct.textContent='05';
+      var lbl = pO>0.5 ? 'Arrival' : 'The Invitation';
+      if(roSt) roSt.textContent=lbl;
+      if(navSt) navSt.textContent=lbl;
+    }
+  }
+
+  var lastT=performance.now(),TAU=0.095,visible=false;
+  function loop(now){
+    now=now||performance.now();
+    var dt=Math.min((now-lastT)/1000,0.05);lastT=now;
+    targ=compute();
+    var a=1-Math.exp(-dt/TAU);
+    prog+=(targ-prog)*a;
+    if(Math.abs(targ-prog)<0.0003)prog=targ;
+    if(visible) draw(reduce?targ:prog);
+    requestAnimationFrame(loop);
+  }
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){visible=e.isIntersecting;});
+  },{rootMargin:'10% 0px'});
+  io.observe(section);
+  requestAnimationFrame(loop);
+})();
+</script>
+
+<!-- ===================== SECTION 02 ENGINE ===================== -->
+<script>
+(function(){
+  "use strict";
+  var section = document.getElementById('os');
+  var track   = document.getElementById('osTrack');
+  var canvas  = document.getElementById('osCanvas');
+  var thesis  = document.getElementById('osThesis');
+  var caption = document.getElementById('osCaption');
+  var phaseEls= Array.prototype.slice.call(document.querySelectorAll('.os-phase'));
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* easing — match the hero exactly (smootherstep, fps-independent smoothing) */
+  function clamp(v,a,b){return Math.min(Math.max(v,a),b);}
+  function smooth(e0,e1,x){var t=clamp((x-e0)/(e1-e0),0,1);return t*t*t*(t*(t*6-15)+10);}
+  function lerp(a,b,t){return a+(b-a)*t;}
+
+  /* phase captions */
+  var CAPTIONS = [
+    'Raw signal — without meaning',
+    'Signal becomes pattern',
+    'Pattern projects forward',
+    'Foresight resolves into one decision'
+  ];
+
+  /* ---------- device pixel sizing ---------- */
+  var DPR=1,W=0,H=0;
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1, 2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=W*DPR; canvas.height=H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    buildField();
+  }
+
+  /* ---------- the intelligence field ----------
+     A set of nodes. Each has:
+       - a "signal" scatter position (noise)
+       - a "cohered" position (a meaningful constellation)
+       - a forward "projection" target (Predict)
+     Plus a single decisive path used in Decide. */
+  var N=46, nodes=[], decisive=[];
+  function buildField(){
+    nodes=[]; decisive=[];
+    var cx=W*0.5, cy=H*0.5;
+    var spanX=Math.min(W*0.34,520), spanY=Math.min(H*0.26,240);
+    for(var i=0;i<N;i++){
+      // scatter (signal) — wide, random, cool
+      var sx=cx+(Math.random()*2-1)*Math.min(W*0.46,820);
+      var sy=cy+(Math.random()*2-1)*Math.min(H*0.42,420);
+      // cohered (understand) — organized along a gentle wave, left cluster
+      var t=i/(N-1);
+      var ox=cx+lerp(-spanX,spanX*0.2,t);
+      var oy=cy+Math.sin(t*Math.PI*2.0)*spanY*0.5 + (Math.random()*2-1)*16;
+      // projected (predict) — extends to the right, ahead of cohered
+      var px=cx+lerp(-spanX*0.2,spanX*1.25,t);
+      var py=cy+Math.sin(t*Math.PI*2.0+0.5)*spanY*0.42*(0.5+t);
+      nodes.push({sx:sx,sy:sy,ox:ox,oy:oy,px:px,py:py,
+                  r:0.8+Math.random()*1.6, ghost:t>0.62});
+    }
+    // decisive path: a single smooth left->right line (the chosen direction)
+    var pts=7;
+    for(var k=0;k<pts;k++){
+      var tt=k/(pts-1);
+      decisive.push({
+        x:cx+lerp(-spanX,spanX*1.2,tt),
+        y:cy+Math.sin(tt*Math.PI*0.9-0.3)*spanY*0.32
+      });
+    }
+  }
+
+  /* ---------- scroll progress for this section ---------- */
+  var prog=0, targ=0;
+  function compute(){
+    var rect=track.getBoundingClientRect();
+    var scrollable=track.offsetHeight-window.innerHeight;
+    var passed=clamp(-rect.top,0,scrollable);
+    return scrollable>0?passed/scrollable:0;
+  }
+
+  /* connection helper */
+  function dist2(ax,ay,bx,by){var dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;}
+
+  /* ---------- render ---------- */
+  function draw(p){
+    ctx.clearRect(0,0,W,H);
+    if(W===0) return;
+
+    /* sub-progress for the four phases (with breathing room at the ends):
+       Signal .04-.24 | Understand .24-.50 | Predict .50-.74 | Decide .74-.96 */
+    var pSig = smooth(0.00,0.22,p);                 // scatter -> cohere blend driver
+    var pUnd = smooth(0.24,0.50,p);
+    var pPre = smooth(0.50,0.74,p);
+    var pDec = smooth(0.74,0.94,p);
+
+    // position blend: signal(scatter) -> cohered -> projected
+    // aligned to evenly-paced windows: Signal .12-.32, Understand .33-.53,
+    // Predict .54-.74, Decide .75-.95
+    // morph 1: scatter->cohered across Signal+Understand
+    var mCohere = smooth(0.14,0.50,p);
+    // morph 2: cohered->projected across Predict
+    var mProject= smooth(0.54,0.74,p);
+    // decide: collapse toward decisive line
+    var mDecide = smooth(0.76,0.93,p);
+
+    var ink='240,237,230', gold='200,169,110';
+
+    /* ---- draw connection lines (Understand: points find each other) ---- */
+    var connectStrength = smooth(0.30,0.52,p)*(1-smooth(0.76,0.90,p)); // fade out in Decide
+    if(connectStrength>0.01){
+      ctx.lineWidth=1;
+      for(var i=0;i<N;i++){
+        var a=nodes[i]; if(a.ghost && mProject<0.2) continue;
+        var ax=lerp(lerp(a.sx,a.ox,mCohere),a.px,mProject);
+        var ay=lerp(lerp(a.sy,a.oy,mCohere),a.py,mProject);
+        for(var j=i+1;j<N;j++){
+          var b=nodes[j];
+          var bx=lerp(lerp(b.sx,b.ox,mCohere),b.px,mProject);
+          var by=lerp(lerp(b.sy,b.oy,mCohere),b.py,mProject);
+          var d2=dist2(ax,ay,bx,by);
+          if(d2<140*140){
+            var al=(1-Math.sqrt(d2)/140)*0.5*connectStrength;
+            ctx.strokeStyle='rgba('+ink+','+al.toFixed(3)+')';
+            ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+          }
+        }
+      }
+    }
+
+    /* ---- projection trajectories (Predict: lines reach forward) ---- */
+    var projStrength=smooth(0.54,0.74,p)*(1-smooth(0.80,0.93,p));
+    if(projStrength>0.01){
+      ctx.lineWidth=1;
+      for(var i2=0;i2<N;i2++){
+        var a2=nodes[i2]; if(!a2.ghost) continue;
+        var ax2=lerp(a2.ox,a2.px,mProject), ay2=lerp(a2.oy,a2.py,mProject);
+        // a faint forward dash
+        ctx.strokeStyle='rgba('+ink+','+(0.22*projStrength).toFixed(3)+')';
+        ctx.setLineDash([2,4]);
+        ctx.beginPath();ctx.moveTo(ax2-40,ay2);ctx.lineTo(ax2,ay2);ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    /* ---- nodes ---- */
+    for(var k=0;k<N;k++){
+      var n=nodes[k];
+      var nx=lerp(lerp(n.sx,n.ox,mCohere),n.px,mProject);
+      var ny=lerp(lerp(n.sy,n.oy,mCohere),n.py,mProject);
+      // in Decide, pull non-decisive nodes toward the decisive line & fade
+      var fade=1;
+      if(mDecide>0){
+        // nearest decisive point
+        var dp=decisive[Math.round((k/(N-1))*(decisive.length-1))];
+        nx=lerp(nx,dp.x,mDecide*0.7);
+        ny=lerp(ny,dp.y,mDecide*0.7);
+        fade=lerp(1,0.12,mDecide);
+      }
+      var baseA=lerp(0.35,0.9,mCohere)*fade;
+      // ghosts are dimmer until predict
+      if(n.ghost) baseA*=lerp(0.25,1,mProject);
+      ctx.fillStyle='rgba('+ink+','+baseA.toFixed(3)+')';
+      ctx.beginPath();ctx.arc(nx,ny,n.r,0,Math.PI*2);ctx.fill();
+    }
+
+    /* ---- the decisive line (Decide: one gold path) ---- */
+    if(mDecide>0.01){
+      var drawLen=smooth(0.78,0.95,p);             // line draws in
+      ctx.lineWidth=1.5;
+      ctx.strokeStyle='rgba('+gold+','+(0.9*mDecide).toFixed(3)+')';
+      ctx.shadowColor='rgba('+gold+',0.5)';ctx.shadowBlur=12;
+      ctx.beginPath();
+      var total=decisive.length-1;
+      for(var s=0;s<=total;s++){
+        var seg=s/total;
+        if(seg>drawLen) break;
+        var pt=decisive[s];
+        if(s===0)ctx.moveTo(pt.x,pt.y); else ctx.lineTo(pt.x,pt.y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur=0;
+      // decisive endpoint node
+      if(drawLen>0.98){
+        var end=decisive[total];
+        ctx.fillStyle='rgba('+gold+','+mDecide.toFixed(3)+')';
+        ctx.beginPath();ctx.arc(end.x,end.y,4,0,Math.PI*2);ctx.fill();
+      }
+    }
+
+    /* ---- thesis fades quickly as the process begins (was lingering too long) ---- */
+    var thOp=(1-smooth(0.03,0.10,p));
+    thesis.style.opacity=thOp.toFixed(3);
+    thesis.style.transform='translateY('+lerp(0,-30,smooth(0.03,0.10,p)).toFixed(1)+'px)';
+
+    /* ---- phase labels — evenly paced cadence ----
+       Four phases share the scroll from 0.12 to 0.96 in equal measures, so each gets
+       the same dwell time and the thesis no longer over-stays relative to them. */
+    var windows=[
+      [0.12,0.32],   // Signal
+      [0.33,0.53],   // Understand
+      [0.54,0.74],   // Predict
+      [0.75,0.95]    // Decide
+    ];
+    var active=-1;
+    for(var w=0;w<4;w++){
+      var lo=windows[w][0], hi=windows[w][1];
+      // appear in first third, hold, fade in last third — consistent shape per phase
+      var inn=smooth(lo,lo+(hi-lo)*0.30,p);
+      var out=smooth(hi-(hi-lo)*0.24,hi,p);
+      var op=inn*(1-out);
+      var el=phaseEls[w];
+      el.style.opacity=op.toFixed(3);
+      el.style.transform='translateY('+lerp(20,-14,smooth(lo,hi,p)).toFixed(1)+'px)';
+      if(op>0.5) active=w;
+    }
+    if(active>=0){
+      caption.textContent=CAPTIONS[active];
+      caption.style.opacity='1';
+    } else {
+      caption.style.opacity='0';
+    }
+
+    /* ---- CONTINUITY: keep the persistent readout alive through this section ----
+       The readout latches to the phase ZONE the scroll is in (by midpoint), so it
+       never flickers back to the generic section name in the gaps between labels. */
+    var roPct=document.getElementById('pct');
+    var roSt =document.getElementById('stName');
+    var navSt=document.getElementById('navState');
+    if(roPct){
+      var labels=['Signal','Understand','Predict','Decide'];
+      // pick the phase whose zone we're nearest to, latched across gaps
+      var zone=0;
+      if(p>=0.12){
+        zone=0;
+        for(var z=0;z<4;z++){ if(p >= (windows[z][0]+windows[z][1])/2 - 0.10) zone=z; }
+      }
+      var lbl = p<0.12 ? 'The Operating System' : labels[zone];
+      roPct.textContent='02';
+      if(roSt) roSt.textContent=lbl;
+      if(navSt) navSt.textContent=lbl;
+    }
+  }
+
+  /* ---------- loop (only render when section is near viewport) ---------- */
+  var lastT=performance.now(), TAU=0.085, visible=false;
+  function loop(now){
+    now=now||performance.now();
+    var dt=Math.min((now-lastT)/1000,0.05); lastT=now;
+    targ=compute();
+    var a=1-Math.exp(-dt/TAU);
+    prog+=(targ-prog)*a;
+    if(Math.abs(targ-prog)<0.0003)prog=targ;
+    if(visible) draw(reduce?targ:prog);
+    requestAnimationFrame(loop);
+  }
+
+  // only animate when the section is on/near screen (perf)
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ visible=e.isIntersecting; });
+  },{rootMargin:'10% 0px'});
+  io.observe(section);
+
+  window.addEventListener('resize',function(){ clearTimeout(window.__osR);
+    window.__osR=setTimeout(resize,180); });
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+
