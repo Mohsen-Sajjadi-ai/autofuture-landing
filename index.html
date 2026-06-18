@@ -139,7 +139,7 @@ header[data-solid="1"]{
 /* ---------- SCROLL STAGE ---------- */
 /* tall scroll container; inside, a sticky viewport holds the video + overlays */
 #engine{position:relative;z-index:10}
-.scene-track{position:relative;height:1000vh}      /* full six-beat arc */
+.scene-track{position:relative;height:900vh}      /* six-beat arc; tail trimmed */
 .stage{
   position:sticky;top:0;height:100vh;width:100%;
   overflow:hidden;display:flex;align-items:center;justify-content:center;
@@ -419,8 +419,9 @@ header[data-solid="1"]{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:0 var(--gutter) clamp(120px,18vh,180px);text-align:center}
 /* the symbol — axis terminus */
-.invite-mark{margin-bottom:clamp(28px,5vh,56px);opacity:0;will-change:opacity,transform}
-.invite-mark img{height:clamp(54px,7vw,84px);width:auto}
+.invite-mark{margin-top:clamp(14px,2.4vh,28px);margin-bottom:clamp(28px,5vh,56px);
+  opacity:0;will-change:opacity,transform}
+.invite-mark img{height:clamp(48px,6.1vw,74px);width:auto}
 /* resolution line */
 .invite-line{margin-bottom:clamp(36px,6vh,80px);opacity:0;will-change:opacity,transform}
 .invite-line p{font-weight:300;letter-spacing:-.018em;line-height:1.1;
@@ -788,7 +789,7 @@ header[data-solid="1"]{
           <span class="ipath-label">Book an Executive Strategy Session</span>
           <span class="ipath-arrow">→</span>
         </a>
-        <a class="ipath" href="https://app.autofuture.ai" target="_blank" rel="noopener" data-sub="Access to the operating system · By invitation only.">
+        <a class="ipath" href="https://rev-flow-command.base44.app" target="_blank" rel="noopener" data-sub="Access to the operating system · By invitation only.">
           <span class="ipath-num">02</span>
           <span class="ipath-label">Request Private Beta Access</span>
           <span class="ipath-arrow">→</span>
@@ -910,13 +911,14 @@ header[data-solid="1"]{
   function elerp(a,b,e0,e1,x){return lerp(a,b,smooth(e0,e1,x));}
 
   /* ---------- video scrubbing (frame-accurate) ----------
-     Reliable paused-video scrubbing across browsers:
-     - Use currentTime directly (NOT fastSeek — fastSeek snaps to keyframes and is
-       unreliable at repainting a PAUSED video in Chrome, a known cause of the frame
-       appearing frozen even while currentTime advances).
-     - After issuing a seek, request a video frame callback (where supported) so the
-       compositor is nudged to actually present the new frame.
-     - Convergent: re-issue on the next rAF until we reach the target; never stalls. */
+     ROOT-CAUSE-CORRECT scrubbing for a scroll-driven video:
+     - The video stays PAUSED. Frames are driven purely via currentTime.
+     - currentTime is set directly (not fastSeek — fastSeek snaps to keyframes).
+     - A SELF-REARMING requestVideoFrameCallback keeps the compositor presenting the
+       newly-decoded frame after each seek, and re-issues a seek if the displayed
+       frame lags the target. The previous build used playbackRate=0 plus an EMPTY
+       rVFC: playbackRate=0 is unreliable across browsers and an empty rVFC forces no
+       paint — that combination was the regression that re-froze the first frame. */
   var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
               (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
   var wantTime=0, lastSet=-1, ready=false;
@@ -926,17 +928,19 @@ header[data-solid="1"]{
     if(!ready) return;
     if(Math.abs(wantTime-lastSet) < 0.010) return;   // already essentially there
     lastSet=wantTime;
-    try{
-      video.currentTime=wantTime;
-      // nudge the compositor to present the seeked frame (paused videos can lag)
-      if(hasRVFC){ video.requestVideoFrameCallback(function(){}); }
-    }catch(e){}
+    try{ video.currentTime=wantTime; }catch(e){}
   }
   function setVideoTime(t){
     wantTime=clamp(t,0,VID_DUR-0.02);
     applyVideoSeek();                                 // issue every frame; convergent
   }
-  // convergence guard: if a seek lands and we've since moved, re-issue toward target
+  // self-rearming frame pump: each presented frame re-registers the callback, so the
+  // paused video keeps painting the latest seeked frame and never stalls on frame 0.
+  function framePump(){
+    if(ready && Math.abs(wantTime-video.currentTime) > 0.033){ lastSet=-1; applyVideoSeek(); }
+    if(hasRVFC) video.requestVideoFrameCallback(framePump);
+  }
+  // convergence guard via the standard seeked event (covers browsers without rVFC)
   video.addEventListener('seeked',function(){
     if(ready && Math.abs(wantTime-video.currentTime)>0.04){ lastSet=-1; applyVideoSeek(); }
   });
@@ -1059,22 +1063,16 @@ header[data-solid="1"]{
       signature.style.transform='translateY('+elerp(10,0,0.56,0.66,post).toFixed(1)+'px)';
     }
 
-    // ---- SCENE 7: DECISION INFRASTRUCTURE ----  window ~[0.70 .. 1.0]
-    var rOp = smooth(0.70,0.82,post);                    // entry mirrors Mohsen exit (0.72)
+    // ---- SCENE 7: RESOLUTION — the video resolves into the AutoFuture symbol ----
+    // The symbol resolves just after Mohsen exits, then holds calmly to the end of
+    // the hero arc before descending into Section 02. The hero track was trimmed so
+    // this hold is brief — no trailing dead zone.
+    var rOp = smooth(0.74,0.84,post);                    // entry overlaps Mohsen exit (0.82)
     setScene(sceneResolve, rOp);
     if(logoLockup){
-      logoLockup.style.opacity=smooth(0.73,0.85,post).toFixed(3);
-      logoLockup.style.transform='translateY('+elerp(12,0,0.73,0.85,post).toFixed(1)+'px) scale('+elerp(0.92,1,0.73,0.88,post).toFixed(3)+')';
-    }
-    var resLine=document.querySelector('.resolve-line');
-    if(resLine){
-      resLine.style.opacity=smooth(0.76,0.88,post).toFixed(3);
-      resLine.style.transform='translateY('+elerp(14,0,0.76,0.90,post).toFixed(1)+'px)';
-    }
-    if(paths){
-      var pv=smooth(0.84,0.97,post);
-      paths.style.opacity=pv.toFixed(3);
-      paths.style.transform='translateY('+elerp(16,0,0.84,0.99,post).toFixed(1)+'px)';
+      var symIn=smooth(0.76,0.90,post);                  // resolve, overlapping Mohsen fade
+      logoLockup.style.opacity=symIn.toFixed(3);
+      logoLockup.style.transform='translateY('+elerp(14,0,0.76,0.90,post).toFixed(1)+'px) scale('+elerp(0.9,1,0.76,0.92,post).toFixed(3)+')';
     }
 
     /* hint fades almost immediately */
@@ -1152,22 +1150,18 @@ header[data-solid="1"]{
   function boot(){
     ready=true;
     if(ldFill) ldFill.style.width='100%';
-    // Priming for reliable scrubbing: start playback muted, then hold the video in a
-    // "playing at zero speed" state instead of pausing. A playing video repaints on
-    // every currentTime change; a PAUSED video may not (the root cause of the frame
-    // appearing frozen while currentTime advances). playbackRate=0 keeps it presenting
-    // frames on seek without actually advancing on its own.
+    // Prime the decoder: a muted play() forces the decode pipeline to attach so the
+    // first currentTime seek actually renders. We pause immediately (keeping the video
+    // paused for scrubbing) and do NOT touch playbackRate. Then start the frame pump.
     video.muted=true;
     var pr=video.play();
-    function holdZero(){
-      try{ video.playbackRate=0; }catch(e){}
-      applyVideoSeek();
-    }
-    if(pr&&pr.then){ pr.then(holdZero).catch(function(){
-      // autoplay blocked: fall back to pause; first user scroll-gesture will free it
+    if(pr&&pr.then){
+      pr.then(function(){ video.pause(); applyVideoSeek(); if(hasRVFC) video.requestVideoFrameCallback(framePump); })
+        .catch(function(){ try{ video.pause(); }catch(e){} if(hasRVFC) video.requestVideoFrameCallback(framePump); });
+    }else{
       try{ video.pause(); }catch(e){}
-    }); }
-    else { holdZero(); }
+      if(hasRVFC) video.requestVideoFrameCallback(framePump);
+    }
     requestAnimationFrame(tick);
     // lift veil
     setTimeout(function(){ veil.classList.add('gone'); },520);

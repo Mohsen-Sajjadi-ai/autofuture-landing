@@ -54,5 +54,5 @@ PRODUCTION NOTES
 - The site is one continuous scroll experience (~31 viewports).
 - CTAs:
     Book an Executive Strategy Session → https://calendly.com/autofuture-ai/30min
-    Request Private Beta Access        → https://app.autofuture.ai
+    Request Private Beta Access        → https://rev-flow-command.base44.app
     LinkedIn (footer)                  → https://www.linkedin.com/in/mohsensajjadi-ai/
